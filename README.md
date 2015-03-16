@@ -31,3 +31,153 @@ The parity bit is another safety feature of the NDD Singleline protocol. It is u
 
 <b>Reset bits:</b>  
 The reset bits' function is not that much. They are only here to help the program get some space before receiving the next package.
+
+
+<table>
+		<tbody>
+			<tr>
+				<th colspan="31"><b>Singleline Basic</b></th>
+			</tr>
+			<tr>
+				<td colspan="12">Pre-amble <br> 12 bits</td>
+				<td colspan="4">Address<br>4 bits</td>
+				<td colspan="3">Pack Counter<br> 3 bit</td>
+				<td colspan="8">Data<br>8 bits</td>
+				<td colspan="1">Parity<br>1 bit</td>
+				<td colspan="3">Reset <br> 3 bits (0)</td>
+			</tr>
+			<tr>
+				<td>1</td>
+				<td>0</td>
+				<td>1</td>
+				<td>0</td>
+				<td>1</td>
+				<td>0</td>
+				<td>1</td>
+				<td>0</td>
+				<td>1</td>
+				<td>0</td>
+				<td>1</td>
+				<td>0</td>
+
+				<td>0</td>
+				<td>0</td>
+				<td>0</td>
+ 				<td>1</td>
+
+				<td>1</td>
+				<td>0</td>
+ 				<td>1</td>
+				<td>1</td>
+				<td>0</td>
+ 				<td>1</td>
+				<td>0</td>
+				<td>1</td>
+
+ 				<td>0</td>
+ 				<td>0</td>
+ 				<td>1</td>
+
+ 				<td>0</td>
+
+ 				<td>0</td>
+ 				<td>0</td>
+ 				<td>0</td>
+
+			</tr>
+			<tr>
+				<td colspan="12">NaN</td>
+				<td colspan="4">0x1</td>
+				<td colspan="3">0x5</td>
+				<td colspan="8">0xA9</td>
+				<td colspan="1">0</td>
+				<td colspan="3">Zero</td>
+			</tr>
+		</tbody> 
+	</table>
+	<br>  
+<table border="solid"style="text-align:center">
+	<tbody>
+		<tr>
+			<th colspan="49"><b>Singleline Pro<br>Coordinate example</b></th>
+		</tr>
+		<tr>
+			<td colspan="12">Pre-amble <br> 12 bits</td>
+			<td colspan="4">Address<br>4 bits</td>
+			<td colspan="3">Pack Counter<br> 3 bit</td>
+			<td colspan="2">Data length<br> 2 bit</td>
+			<td colspan="24">Data<br>3 Byte</td>
+			<td colspan="1">Parity<br>1 bit</td>
+			<td colspan="3">Reset <br> 3 bits (0)</td>
+		</tr>
+		<tr>
+			<td>1</td>
+			<td>0</td>
+			<td>1</td>
+			<td>0</td>
+			<td>1</td>
+			<td>0</td>
+			<td>1</td>
+			<td>0</td>
+			<td>1</td>
+			<td>0</td>
+			<td>1</td>
+			<td>0</td>
+
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+ 			<td>1</td>
+
+			<td>0</td>
+			<td>0</td>
+ 			<td>1</td>
+
+ 			<td>1</td>
+ 			<td>0</td>
+
+			<td>0</td>
+			<td>0</td>
+ 			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+ 			<td>1</td>
+			<td>0</td>
+			<td>0</td>
+ 			<td>1</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+			<td>0</td>
+ 			<td>1</td>
+			<td>0</td>
+			<td>0</td>
+ 			<td>1</td>
+			<td>0</td>
+			<td>1</td>
+ 			<td>1</td>
+ 			<td>0</td>
+ 			<td>0</td>
+
+ 			<td>0</td>
+
+ 			<td>0</td>
+ 			<td>0</td>
+ 			<td>0</td>
+
+		</tr>
+		<tr>
+			<td colspan="12">NaN</td>
+			<td colspan="4">0x1</td>
+			<td colspan="3">0x1</td>
+			<td colspan="2">0b10</td>
+			<td colspan="8">Internal: 0x1</td>
+			<td colspan="8">X: 0x21</td>
+			<td colspan="8">Y: 0x2C</td>
+			<td colspan="1">0</td>
+			<td colspan="3">Zero</td>
+		</tr>
+	</tbody> 
+</table>
