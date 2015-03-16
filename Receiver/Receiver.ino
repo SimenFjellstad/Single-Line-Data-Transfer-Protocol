@@ -1,6 +1,7 @@
 //Author: Simen Fjellstad
 //License: All rights reserved
 
+
 //Data Transfer Settings:
 boolean DEBUG = true;
 int paritytype = 1;   //This is tested like this "if(int x % 2 == paritytype % 2);" this means that if putting an odd number,
