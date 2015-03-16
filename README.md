@@ -1,4 +1,5 @@
 # Single-Line-Data-Transfer-Protocol
+##*Disclaimer: This is still a work in progress, and may often not work with older code*
 A data transfer protocol utilizing only a single line for transfer. The data signal type is based upon a Return-to-zero coding, although it is positively flipped, so we have two positive voltages, instead of a positive and a negative voltage. These voltages are as following:  
 5V: Defines a logic 1 in signal.  
 2.5V: Defines a logic 0 in signal.  
