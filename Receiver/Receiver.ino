@@ -1,48 +1,68 @@
-//Author: Simen Fjellstad
-//License: All rights reserved
+//This library should help you send info cross platform in the microprocessor world as easy as possibly without adding too much hardware.
 
+#define even = 0
+#define odd = 1;
 
 //Data Transfer Settings:
-boolean DEBUG = true;
+boolean DEBUG = false;
 int paritytype = 1;   //This is tested like this "if(int x % 2 == paritytype % 2);" this means that if putting an odd number,
                       //parity checking will check for odd numbers, same with even numbers.
+
 int preamblebits[] = {1,0,1,0,1,0,1,0,1,0,1,0};
 int myAddress = 0b0001;
 
-
-//Default values & initialization:
-int* address = new int[4];
-int* data = new int[8];
+int parity = 0;
 
 boolean valid = true;
 int state = 0;
 int pos = 0;
 int val = -1;
 int pack = 0;
+int transferspeed = 10000; // µ seconds
 
 //System Counters:
 int packagecount = 0;
 int completePackages = 0;
 int errorPackages = 0;
+int senderrors = 0;
 
+int k = 0;
 
-void setup()
-{
-  //PinModes
-  Serial.begin(9600); //Open serial port for communication using serialport
-  pinMode(A1, INPUT); //Set port A2 to INPUT mode.
+int sendPackage(byte address,byte data){  
+  //Preamble (Bits: 0-11)
+  for(int i = 0; i < 6; i++){
+    writeout(1);
+    writeout(0);
+  }
+  
+  //Address (Bits: 12-15)
+  for(int i = 0; i < 4; i++)
+    writeout(bitRead(address,i)); //MIGHT BE FLIPPED CHECK IT NEXT RUN
+
+  //Package counter: (3 bits auto increment) (Bits: 16-18)
+  for(int i = 0; i < 3; i++){  
+    writeout(bitRead(k,i)); 
+  }
+  
+  k++;
+  if(k == 8) k = 0;  
+    
+  //Data (Bits: 19-26)
+  for(int i = 0; i < 8; i++)
+    writeout(bitRead(data,i)); //MIGHT BE FLIPPED CHECK IT NEXT RUN
+
+  //Parity (Bit: 27)
+  writeout(getParity());
+  if(getParity() != (paritytype % 2)) return 0x1;
+  
+  //end reset bits (FalseBits: 28-30)
+  for(int i = 0; i < 2; i++)
+    writeout(0);
+
+  return 0;
 }
 
-void loop()
-{ 
-  //Test program getting and printing packages to serialport:
-  Serial.println("Next package:");
-  resetpackage();
-  getPackage();
-}
-
-void getPackage()
-{
+void getPackage(){
   while(valid){
     while(map(analogRead(A1), 0,800,0, 2) == 0);  //Wait while there is no voltage on the line.
     val = map(analogRead(A1), 0, 800, -1, 1); //Get the bit.
@@ -73,13 +93,12 @@ void getPackage()
         }
         if(x == myAddress){
           state++;
-          pos = 0;
         }
         else{
           state = 0;
-          pos = 0;
           pack = 8;
         }
+        pos = 0;
       }
       pos++;
     }
@@ -133,7 +152,6 @@ int getCurrentPack(){
 
 
 
-
 void printpos(){
   //Example of print: "Pos: 3 Value: 1"
   Serial.print("Pos: ");
@@ -142,25 +160,19 @@ void printpos(){
   Serial.println(val);
 }
 
+
+
 void checkParity()
 {
   int cnt = 0;
   for(int i = 0; i < 25; i++) 
     if(data[i] == 2) 
       cnt++;
-    
-  
+
   if(cnt % 2 == paritytype % 2) //Determine if the package is good by comparing cnt with odd or even
     completePackages++;
   else
     errorPackages++;
-    
-    if(DEBUG){
-      Serial.print("Good: ");
-      Serial.println(completePackages);
-      Serial.print("Bad: ");
-      Serial.println(errorPackages);
-    }
 }
 
 
@@ -171,4 +183,37 @@ void resetpackage(){
   
   state = 0;
   valid = true;
+}
+
+
+
+int getParity(){
+  if(parity % 2 == 1) return 1;
+  return 0;
+}
+
+void resetPackage(){
+  for(int i = 0; i <= 4; i++)
+    address[i] = 0;
+    
+  for(int i = 0; i <= 8; i++)
+    data[i] = 0;
+}
+
+
+
+void writeout(int level){
+  if(level == 0){ //Gives out 2.5 volts
+    digitalWrite(A0,1);
+    digitalWrite(A1,0);
+  }
+  else if(level == 1){ //Gives out 5 Volts
+    digitalWrite(A0,1);
+    digitalWrite(A1,1);
+    parity++;
+}
+  delayMicroseconds(transferspeed);
+  digitalWrite(A0,0);
+  digitalWrite(A1,0); 
+  delayMicroseconds(transferspeed);  
 }
