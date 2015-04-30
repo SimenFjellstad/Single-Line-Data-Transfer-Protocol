@@ -1,9 +1,8 @@
 #include "Arduino.h"
 #include "SingleLineDTP.h"
 
-int preamblebitpattern[12] = {1,0,1,0,1,0,1,0,1,0,1,0};
 SingleLineDTP::SingleLineDTP(byte myAddress, int transferspeed){
-    paritytype = odd;
+    paritytype = even;
     
     val = -1;
     valid = true;
@@ -41,7 +40,7 @@ void SingleLineDTP::sendPackage(byte address,byte data){
         writeout(1);
         writeout(0);
     }
-/*
+
       //Address (Bits: 12-15)
     for(int i = 0; i < 4; i++)
         writeout(bitRead(address,i)); //MIGHT BE FLIPPED CHECK IT NEXT RUN
@@ -56,8 +55,9 @@ void SingleLineDTP::sendPackage(byte address,byte data){
         outgoingpackage = 0;  
 
       //Data (Bits: 19-26)
-    for(int i = 0; i < 8; i++)
-        writeout(bitRead(data,i)); //MIGHT BE FLIPPED CHECK IT NEXT RUN
+    for(int i = 7; i >= 0; i--){
+        writeout(bitRead(data,i));
+    }
 
       //Parity (Bit: 27)
     writeout(getParity());
@@ -67,31 +67,43 @@ void SingleLineDTP::sendPackage(byte address,byte data){
     }
 
       //end reset bits (FalseBits: 28-30)
-    for(int i = 0; i < 2; i++)
-        writeout(0);*/
+    for(int i = 0; i < 4; i++)
+        writeout(0);
 }
 
 
 
-int SingleLineDTP::getPackage(){
-    int valid = true;
-    int state = 0;
-    int oldstate = 1;
-    Serial.println("GET PACKAGE");
+int SingleLineDTP::getPackage(bool strict){
+	_strict = strict;
+	int x;
+    valid = true;
+    state = 0;
+    oldstate = 1;
+    parity_memory[28] = {0};
 
     while(valid){
-        while(map(analogRead(A2), 0,900,-1, 1) < 0);  //Wait while there is no voltage on the line.
-        val = map(analogRead(A2), 0, 900, -1, 1); //Get the bit.
+        while(map(analogRead(A2), 0,850,-1, 1) < 0);  //Wait while there is no voltage on the line.
+        val = map(analogRead(A2), 0, 850, -1, 1); //Get the bit.
         if(val < 0) continue;                         //Safety check
-        while(map(analogRead(A2), 0,900,-1, 1) == val);
+        while(map(analogRead(A2), 0,850,-1, 1) == val);
+
         if(oldstate != state){
             oldstate = state;
-            Serial.print("State ");
-            Serial.println(state);
         } 
-        printpos();
+        
+        if(state == 0)
+        	parity_memory[pos] = val;
+        else if(state == 1)
+        	parity_memory[pos+12] = val;
+        else if(state == 2)
+        	parity_memory[pos+16] = val;
+        else if(state == 3)
+        	parity_memory[pos+19] = val;
+        else if(state == 4)
+        	parity_memory[pos+27] = val;
+
         if(state == 0) { //PREAMBLE
-            if(val == preamblebitpattern[pos]){ //If the current input matches the preamblebit, continue
+            if((byte)val == (byte)preamblebitpattern[pos]){ //If the current input matches the preamblebit, continue
                 pos++;
                 if(pos > 11){
                     state++;
@@ -103,94 +115,91 @@ int SingleLineDTP::getPackage(){
             }
         }
         else if(state == 1){ //ADDRESS
-            if(pos < 4) 
-                address[pos] = val;
-            else{
-                int x = address[0];
-                for(int i = 1; i<4; i++){
-                    x<<1;
-                    x+=address[i];
-                }
-                if(x == _myAddress){
+            if(pos == 0) x = 0;
+            bitWrite(x,pos,val);
+            if(pos == 3){               	
+                if(x == _myAddress)
                     state++;
-                }
                 else{
                     state = 0;
                     pack = 8;
+                	x = 0;
                 }
                 pos = 0;
+                continue;
             }
             pos++;
         }
         else if(state == 2){ //PACKAGE COUNT
-            bitWrite(data,pos,val);
+            if(pos == 0) x = 0;
+            bitWrite(x,pos,val);
             if(pos == 2){
-                int x = bitRead(data,0);
-                for(int i = 1; i<3; i++){
-                    x<<1;
-                    x += bitRead(data,0);
-                }
-                if(x == getPackageNumber()){
-                    pack++;
-                    state++;
-                }
-                else{
-                    state = 0;
-                    pack = 8;
-                }
+                if(_strict){
+                	//Serial.print(x);
+                	if(x == getPackageNumber()){
+                	pack++;
+                	if(pack > 7) pack = 0;
+                	} 
+                	else{
+                		pack = 7;
+                		return -2; //ERROR: PACKAGE DROPPED
+                	} 
+                }                
+                state++;	
                 pos = 0;
+                continue;
             }
             pos++;
         }   
         else if(state == 3){ //DATA
             if(pos == 0) data = 0;
-                bitWrite(data,pos,val);  
-            if(pos == 8)
+            bitWrite(data,7-pos,val);  
+            if(pos == 7){
                 state = 4;
-            pos++;
-        }
-        else if(state == 4){ //PARITY
-            if(pos > 12){
-                if(checkParity())
-                    return data;
-                
-                pos = 0; 
-                valid = false;
-                state = 0;
+                pos = 0;
+                _data = data;
+                continue;
             }
             pos++;
         }
+        else if(state == 4){ //PARITY
+            if(checkParity()){                
+                pos = 0; 
+                valid = false;
+                state = 0;
+                return _data;
+            }
+            pos = 0;
+            state = 0;
+        }
     }
-    return 1;
+    return -1;
 }
 
 
 
 int SingleLineDTP::getPackageNumber(){
-    if(pack < 7)
-        return pack + 1;
-    else
-        return 0;
+    if(pack < 7) return pack + 1;
+    else return 0;
 }
 
 
 
 void SingleLineDTP::printpos(){
     //Example of print: "Pos: 3 Value: 1"
-    Serial.print("Pos: ");
     Serial.print(pos);
-    Serial.print(" Value: ");
+    Serial.print(" : ");
     Serial.println(val);
 }
 
 
 
-bool SingleLineDTP::checkParity()
-{
+bool SingleLineDTP::checkParity(){
     int cnt = 0;
-    for(int i = 0; i < 25; i++) 
-        if(bitRead(data,i) == 2) 
+    for(int i = 0; i < sizeof(parity_memory); i++) 
+        if(parity_memory[i] == 1) 
             cnt++;
+    parity_memory[28] = {0};
 
     if(cnt % 2 == paritytype % 2){ //Determine if the package is good by comparing cnt with odd or even
         completePackages++;
@@ -200,6 +209,7 @@ bool SingleLineDTP::checkParity()
         errorPackages++;
         return false;
     }
+
 }
 
 

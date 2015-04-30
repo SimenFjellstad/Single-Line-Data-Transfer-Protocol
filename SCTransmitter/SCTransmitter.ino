@@ -1,6 +1,6 @@
 #include <SingleLineDTP.h>
 
-SingleLineDTP sl(1, 1000);
+SingleLineDTP sl(0, 5);
 
 void setup(){
   Serial.begin(9600);
@@ -8,12 +8,14 @@ void setup(){
   pinMode(A1, OUTPUT);
   
   sl.setMyAddress(0);
-  Serial.print("My address is:");
-  Serial.print(sl.getMyAddress());
 
 }
 
 void loop(){
-  delay(1000);
-  sl.sendPackage(1,0b00110011);
+  //delay(5);
+  uint8_t data = random(512);
+  Serial.print(sl.outgoingpackage);
+  Serial.print(" | ");
+  Serial.println(data, DEC);
+  sl.sendPackage(0b1001,data);
 }

@@ -20,13 +20,17 @@ class SingleLineDTP
     byte _myAddress;
     int _transferspeed;
     int paritytype;
+    bool _strict;
     bool DEBUG;
-    int preamblebitpattern[];
+    int preamblebitpattern[12] = {1,0,1,0,1,0,1,0,1,0,1,0};
+    int parity_memory[28];
     int data;
+    int _data;
     int address[4];
+    int outgoingpackage;
 
     //Secondary functions
-    int getPackage();
+    int getPackage(bool strict);
     int getPackageNumber();
     int getParityType();
     int getParity();
@@ -42,8 +46,9 @@ class SingleLineDTP
     void writeout(int level);
   private:
     bool checkParity();
-    bool valid;
+    bool valid = true;
     int state;
+    int oldstate;
     int pos;
     int val;
     int pack;
@@ -52,7 +57,6 @@ class SingleLineDTP
     int completePackages;
     int errorPackages;
     int senderrors;
-    int outgoingpackage;
 };
 
 #endif
