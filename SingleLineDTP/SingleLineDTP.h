@@ -3,6 +3,7 @@
 
 #include "Arduino.h"
 
+
 #define even 0
 #define odd 1;
 
@@ -15,30 +16,32 @@
 class SingleLineDTP
 {
   public:
-    SingleLineDTP(int myAddress, int transferspeed);
-
-    //Secondary functions
-    int getPackageNumber();
+    SingleLineDTP(byte myAddress, int transferspeed);
+    byte _myAddress;
+    int _transferspeed;
     int paritytype;
-    int getParityType();
-    int getParity();
     bool DEBUG;
-	int _myAddress;
-	int getMyAddress();
-	int setMyAddress();
-    void printpos();
-  	int _transferspeed;
-  	int getTransferSpeed();
-  	int setTransferSpeed();
-  	int getTransferLog();
     int preamblebitpattern[];
     int data;
     int address[4];
 
-    void sendPackage(byte address, byte data);
+    //Secondary functions
     int getPackage();
+    int getPackageNumber();
+    int getParityType();
+    int getParity();
+    byte getMyAddress();
+    int getTransferSpeed();
+    int getTransferLog();
+
+    byte setMyAddress(byte myAddress);
+    int setTransferSpeed();
+    void sendPackage(byte address, byte data);
     void resetPackage();
+    void printpos();
+    void writeout(int level);
   private:
+    bool checkParity();
     bool valid;
     int state;
     int pos;
@@ -50,8 +53,6 @@ class SingleLineDTP
     int errorPackages;
     int senderrors;
     int outgoingpackage;
-    void writeout(int level);
-    bool checkParity();
 };
 
 #endif

@@ -2,11 +2,7 @@
 #include "SingleLineDTP.h"
 
 int preamblebitpattern[12] = {1,0,1,0,1,0,1,0,1,0,1,0};
-
-
-
-SingleLineDTP::SingleLineDTP(int myAddress, int transferspeed){
-    
+SingleLineDTP::SingleLineDTP(byte myAddress, int transferspeed){
     paritytype = odd;
     
     val = -1;
@@ -25,6 +21,19 @@ SingleLineDTP::SingleLineDTP(int myAddress, int transferspeed){
 }
 
 
+byte SingleLineDTP::setMyAddress(byte myAddress){
+    if(myAddress > -1 && myAddress < 16){
+            _myAddress = myAddress;
+            return 1;
+        }
+    
+    _myAddress = 0;
+    return 1;
+}
+byte SingleLineDTP::getMyAddress(){
+   return _myAddress;
+}
+
 
 void SingleLineDTP::sendPackage(byte address,byte data){  
     //Preamble (Bits: 0-11)
@@ -32,7 +41,7 @@ void SingleLineDTP::sendPackage(byte address,byte data){
         writeout(1);
         writeout(0);
     }
-
+/*
       //Address (Bits: 12-15)
     for(int i = 0; i < 4; i++)
         writeout(bitRead(address,i)); //MIGHT BE FLIPPED CHECK IT NEXT RUN
@@ -59,23 +68,32 @@ void SingleLineDTP::sendPackage(byte address,byte data){
 
       //end reset bits (FalseBits: 28-30)
     for(int i = 0; i < 2; i++)
-        writeout(0);
+        writeout(0);*/
 }
 
 
 
 int SingleLineDTP::getPackage(){
+    int valid = true;
+    int state = 0;
+    int oldstate = 1;
+    Serial.println("GET PACKAGE");
 
     while(valid){
-        while(map(analogRead(A1), 0,800,0, 2) == 0);  //Wait while there is no voltage on the line.
-        val = map(analogRead(A1), 0, 800, -1, 1); //Get the bit.
+        while(map(analogRead(A2), 0,900,-1, 1) < 0);  //Wait while there is no voltage on the line.
+        val = map(analogRead(A2), 0, 900, -1, 1); //Get the bit.
         if(val < 0) continue;                         //Safety check
-        while(map(analogRead(A1), 0,800,-1, 1) == val);
-        
+        while(map(analogRead(A2), 0,900,-1, 1) == val);
+        if(oldstate != state){
+            oldstate = state;
+            Serial.print("State ");
+            Serial.println(state);
+        } 
+        printpos();
         if(state == 0) { //PREAMBLE
             if(val == preamblebitpattern[pos]){ //If the current input matches the preamblebit, continue
                 pos++;
-                if(pos > sizeof(preamblebitpattern)){
+                if(pos > 11){
                     state++;
                     pos = 0;
                 }
@@ -143,6 +161,7 @@ int SingleLineDTP::getPackage(){
             pos++;
         }
     }
+    return 1;
 }
 
 
@@ -215,8 +234,8 @@ void SingleLineDTP::writeout(int level){
         digitalWrite(A1,1);
         parity++;
     }
-    delayMicroseconds(_transferspeed);
+    delay(_transferspeed);
     digitalWrite(A0,0);
     digitalWrite(A1,0); 
-    delayMicroseconds(_transferspeed);  
+    delay(_transferspeed);  
 }
