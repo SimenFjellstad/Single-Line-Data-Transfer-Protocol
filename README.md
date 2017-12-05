@@ -54,12 +54,10 @@ The reset bits' function is not that much. They are only here to help the progra
 				<td>0</td>
 				<td>1</td>
 				<td>0</td>
-
 				<td>0</td>
 				<td>0</td>
 				<td>0</td>
  				<td>1</td>
-
 				<td>1</td>
 				<td>0</td>
  				<td>1</td>
@@ -68,17 +66,13 @@ The reset bits' function is not that much. They are only here to help the progra
  				<td>1</td>
 				<td>0</td>
 				<td>1</td>
-
  				<td>0</td>
  				<td>0</td>
  				<td>1</td>
-
- 				<td>0</td>
-
  				<td>0</td>
  				<td>0</td>
  				<td>0</td>
-
+ 				<td>0</td>
 			</tr>
 			<tr>
 				<td colspan="12">NaN</td>
